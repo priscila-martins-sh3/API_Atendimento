@@ -8,8 +8,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\Suporte;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -25,6 +26,13 @@ class User extends Authenticatable
         'tipo_funcionario',
     ];
 
+    public static $tiposPermitidos = ['admin', 'recepcionista', 'suporte', 'gerente'];
+
+    public static function tiposValidos()
+    {
+        return implode(',', self::$tiposPermitidos);
+    }
+    
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -50,5 +58,13 @@ class User extends Authenticatable
 	return $this->hasMany(Suporte::class);
     }
 
-    
+    public function getJWTIdentifier()
+    {
+    return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+    return [];
+    }
 }

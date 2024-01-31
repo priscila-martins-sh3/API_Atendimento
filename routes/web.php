@@ -22,4 +22,4 @@ Route::get('/', function () {
 
 //Route::get('users', [UsersController::class, 'index']);
 //Route::post('users', [UsersController::class, 'store']);
-Route::post('/cadastro', [UsersController::class, 'cadastro']);
+//Route::post('/cadastro', [UsersController::class, 'cadastro']);
