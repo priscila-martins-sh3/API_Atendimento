@@ -12,9 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('suportes', function (Blueprint $table) {
-            $table->string('area_atuacao');
-            
-            
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

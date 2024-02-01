@@ -8,16 +8,18 @@ use App\Models\User;
 
 class UserTest extends TestCase
 {
-    //use RefreshDatabase;
+    use RefreshDatabase;
 
-    /** @test */
+    
     public function test_register()
     {
         $userData = [
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password',
-            'tipo_funcionario' => 'tipo 1',
+            'tipo_funcionario' => 'suporte',
+            'area_atuacao' => 'comercial',
+            
         ];
 
         $response = $this->postJson('/api/register', $userData);
@@ -28,6 +30,24 @@ class UserTest extends TestCase
             'email' => 'test@example.com',
         ]);
     }
+
+    public function test_register_with_invalid_data()
+    {        
+        $invalidUserData = [
+            'name' => 'Test1 User',
+            'email' => 'test1@example.com', // E-mail inválido
+            'password' => 'pass', // Senha muito curta
+            'tipo_funcionario' => 'suporte',
+            'area_atuacao' => 'dp',
+            
+        ];
+    
+        $response = $this->postJson('/api/register', $invalidUserData);
+    
+        // Espera-se que a requisição falhe devido aos dados inválidos
+        $response->assertStatus(400);
+    }
+
     /** @test */
     public function test_authenticate_Valid_Credential()
     {

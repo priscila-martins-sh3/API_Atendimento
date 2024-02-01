@@ -12,9 +12,10 @@ class Suporte extends Model
 
     protected $fillable = [
         'area_atuacao',
-        'livre',
+        
         
     ];
+    
     public function user()
     {
 	return $this->belongsTo(User::class);

@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UsersController;
+use App\Http\Controller\ServicesController;
 
 
 /*
@@ -18,6 +19,16 @@ use App\Http\Controllers\UsersController;
 
 Route::post('login', [UsersController::class, 'authenticate']);
 Route::post('register', [UsersController::class, 'register']);
+
+Route::group(['middleware' => ['jwt.verify']], function() {
+    Route::get('logout', [ServicesController::class, 'logout']);
+    Route::post('create', [ServicesController::class, 'store']);
+    Route::get('services', [ServicesController::class, 'index']);
+    Route::get('serices/{id}', [ServicesController::class, 'show']);
+    Route::put('update/{service}', [ServicesController::class, 'update']);
+    Route::get('get_client', [ServicesController::class, 'get_client']);   
+   
+});
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
