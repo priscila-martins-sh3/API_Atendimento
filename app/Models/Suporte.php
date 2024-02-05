@@ -14,6 +14,7 @@ class Suporte extends Model
         'area_atuacao',
         
         
+        
     ];
     
     public function user()

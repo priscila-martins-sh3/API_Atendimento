@@ -16,7 +16,14 @@ class Service extends Model
         'nome_suporte',
         'retorno',
         'informacoes',     
-        'data',
-        'hora',
+        'data_service',
+        'hora_service',
     ];
+
+    public static $tiposPermitidosAtendimento = ['tirar_duvida', 'informar_problema', 'solicitar_recurso'];
+    public static function tiposValidosAtendimento()
+    {
+        return implode(',', self::$tiposAtendimento);
+    }
 }
+

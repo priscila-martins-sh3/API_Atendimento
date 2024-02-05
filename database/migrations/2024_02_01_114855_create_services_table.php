@@ -20,8 +20,8 @@ return new class extends Migration
             $table->string('nome_suporte');
             $table->boolean('retorno');
             $table->string('informacoes');
-            $table->date('data');
-            $table->time('hora');
+            $table->date('data_service');
+            $table->time('hora_service');
             $table->timestamps();
             
         });

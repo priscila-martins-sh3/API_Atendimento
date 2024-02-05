@@ -24,8 +24,10 @@ Route::group(['middleware' => ['jwt.verify']], function() {
     Route::get('logout', [ServicesController::class, 'logout']);
     Route::post('create', [ServicesController::class, 'store']);
     Route::get('services', [ServicesController::class, 'index']);
-    Route::get('serices/{id}', [ServicesController::class, 'show']);
-    Route::put('update/{service}', [ServicesController::class, 'update']);
+    Route::get('service/{id}', [ServicesController::class, 'show']);
+    Route::put('update/{id}', [ServicesController::class, 'update']);
+
+    
     Route::get('get_client', [ServicesController::class, 'get_client']);   
    
 });
