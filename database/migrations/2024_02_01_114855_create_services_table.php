@@ -19,9 +19,7 @@ return new class extends Migration
             $table->string('tipo_atendimento');
             $table->string('nome_suporte');
             $table->boolean('retorno');
-            $table->string('informacoes');
-            $table->date('data_service');
-            $table->time('hora_service');
+            $table->string('informacoes');            
             $table->timestamps();
             
         });

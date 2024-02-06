@@ -155,5 +155,177 @@ class ServicesController extends Controller
     {
         //
     }
+
+    public function findBySupportName(Request $request)
+    {
+    $user = auth()->user();
+
+    // Verificar se o usuário é do tipo suporte
+    if ($user->tipo_funcionario !== 'suporte') {
+        return response()->json(['error' => 'Somente usuários suporte podem acessar esta função.'], 403);
+    }
+
+    // Buscar os serviços atribuídos ao nome do suporte
+    $services = Service::where('nome_suporte', $user->name)->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => $services
+    ], Response::HTTP_OK);
+    }
+
+    public function findByAreaUnattendedService(Request $request)
+    {
+    $user = auth()->user();
+
+    // Verificar se o usuário é do tipo suporte e está livre
+    if ($user->tipo_funcionario !== 'suporte' || !$user->suporte->livre) {
+        return response()->json(['error' => 'Somente usuários suporte livres podem acessar esta função.'], 403);
+    }
+
+    // Buscar os serviços sem atendimento da área do suporte
+    $services = Service::where('retorno', true)
+                        ->where('area_atendimento', $user->suporte->area_atuacao)
+                        ->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => $services
+    ], Response::HTTP_OK);
+    }
+
+    public function clientService (Request $request)
+    {
+    $user = auth()->user()
+    if ($user->tipo_funcionario !== 'gerente') {
+        return response()->json(['error' => 'Somente usuário gerente podem acessar esta função.'], 403);
+    }   
+   
+    }
+
+    public function clientSearched(Request $request)
+    {
+    // Recuperar uma lista de nomes de clientes registrados no dia especificado
+    $date = $request->input('date');
+    $clients = Service::whereDate('created_at', $date)
+                      ->whereNotNull('nome_cliente')
+                      ->distinct()
+                      ->pluck('nome_cliente');
+
+    return response()->json([
+        'success' => true,
+        'data' => $clients
+    ]);
+    }
+
+    public function servicesByClient(Request $request)
+    {
+    //Recuperar os serviços associados a um cliente específico
+    $clientName = $request->input('client_name');
+    $services = Service::where('nome_cliente', $clientName)
+                       ->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => $services
+    ]);
+    }
+
+    public function suportServicesSearched(Request $request)
+    {
+    $date = $request->input('date');    
+    $suport = Service::whereDate('created_at', $date)
+                    ->whereNotNull('nome_suporte')
+                    ->groupBy('nome_suporte')                      
+                    ->addSelect(['total' => Service::raw('COUNT(*)')])
+                    ->get(['nome_suporte', 'total']);
+
+    return response()->json([
+        'success' => true,
+        'data' => $suport
+    ]);
+    }
+
+    public function servicesBySuport(Request $request)
+    {
+   
+    $suportName = $request->input('suport_name');
+    $services = Service::where('nome_suporte', $suportName)
+                       ->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => $services
+    ]);
+    
+    }
+
+    public function areasSearched(Request $request)
+    {
+    $date = $request->input('date');
+    $areas = Service::whereDate('created_at', $date)
+                    ->distinct()
+                    ->pluck('area');    
+
+    return response()->json([
+        'success' => true,
+        'data' => $areas
+    ]);
+    }
+
+    public function servicesByAreas(Request $request)
+    {
+   
+    $areaName = $request->input('area_name');
+    $services = Service::where('area', $areaName)
+                       ->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => $services
+    ]);
+    }
+
+    public function typesServiceSearched(Request $request)
+    {
+    $data = $request->input('date')    
+    $types = Service::whereDate('created_at', $data)  
+                    ->distinct()
+                    ->pluck('tipo_atendimento');  
+
+    return response()->json([
+        'success' => true,
+        'data' => $types
+    ]);                
+    } 
+
+    public function servicesByType(Request $request)
+    {
+   
+    $typeName = $request->input('type_name');
+    $services = Service::where('tipo_atendimento', $typeName)
+                       ->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => $services
+    ]);
+
+    public function unattendedServiceSearched (Request $request)
+    {
+    $data = $request->input('date')
+    $unattended = Service::whereDate('created_at', $data)  
+                        ->where('retorno', true)
+                        ->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => $unattended
+    ]);              
+    }
+
+    
 }
+
+
 

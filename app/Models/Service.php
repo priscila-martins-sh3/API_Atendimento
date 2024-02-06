@@ -16,8 +16,6 @@ class Service extends Model
         'nome_suporte',
         'retorno',
         'informacoes',     
-        'data_service',
-        'hora_service',
     ];
 
     public static $tiposPermitidosAtendimento = ['tirar_duvida', 'informar_problema', 'solicitar_recurso'];

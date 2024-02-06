@@ -8,7 +8,7 @@ use App\Models\User;
 
 class UserTest extends TestCase
 {
-    use RefreshDatabase;
+    //use RefreshDatabase;
 
     
     public function test_register()
@@ -35,10 +35,10 @@ class UserTest extends TestCase
     {        
         $invalidUserData = [
             'name' => 'Test1 User',
-            'email' => 'test1@example.com', // E-mail inválido
+            'email' => 'test1@example.com', 
             'password' => 'pass', // Senha muito curta
             'tipo_funcionario' => 'suporte',
-            'area_atuacao' => 'dp',
+            'area_atuacao' => '',
             
         ];
     
@@ -73,6 +73,6 @@ class UserTest extends TestCase
         $response = $this->postJson('/api/login', $invalidUserData);
 
         $response->assertStatus(400)
-                 ->assertJson(['success' => false, 'message' => 'Login credentials are invalid.']);
+                 ->assertJson(['success' => false, 'message' => 'As credenciais de login são invalidas.']);
     }
 }
