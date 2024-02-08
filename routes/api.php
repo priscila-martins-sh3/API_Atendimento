@@ -17,24 +17,26 @@ use App\Http\Controller\ServicesController;
 |
 */
 
-Route::post('login', [UsersController::class, 'authenticate']);
+Route::post('login', [UsersController::class, 'authenticate'])->name('login');
 Route::post('register', [UsersController::class, 'register']);
 
 Route::group(['middleware' => ['jwt.verify']], function() {
-    Route::get('logout', [UsersController::class, 'logout']);
-    Route::get('get_user', [UsersController::class, 'get_user']);
+    Route::post('logout', [UsersController::class, 'logout']);
+   
+    
     Route::post('create', [ServicesController::class, 'store']);
     Route::get('services', [ServicesController::class, 'index']);
     Route::get('service/{id}', [ServicesController::class, 'show']);
     Route::put('update/{service}', [ServicesController::class, 'update']);
 
-    Route::get('services/support', [ServicesController::class, 'findBySupportName']);
-    Route::get('services/unattended', [ServicesController::class, 'findByUnattendedService']);   
+    
    
 });
 
-Route::group(['middleware' => ['auth', 'gerente']], function () {    
+Route::group(['middleware' => ['auth', 'suporte']], function () {    
 
+    Route::get('services/support', [ServicesController::class, 'findBySupportName']);
+    Route::get('services/unattended', [ServicesController::class, 'findByUnattendedService']);   
 
 });
 

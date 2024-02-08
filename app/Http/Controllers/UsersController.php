@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Support;
-use JWTAuth;
+//use JWTAuth;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Validator;
@@ -46,6 +47,7 @@ class UsersController extends Controller
         	'password' => bcrypt($request->password),
             'tipo_funcionario' => $request->tipo_funcionario
         ]);
+        
         if ($request->tipo_funcionario === 'suporte') {
             Support::create([
                 'area_atuacao' => $request->area_atuacao,                
@@ -90,7 +92,7 @@ class UsersController extends Controller
                 	'message' => 'Não foi possível criar o token.',
                 ], 500);
         }
-         	
+        //dd($token); 	
  		//Token created, return with success response and jwt token
         return response()->json([
             'success' => true,
@@ -98,9 +100,10 @@ class UsersController extends Controller
         ]);
     }
 
+    
     public function logout(Request $request)
     {        
-        $validator = Validator::make($request->only('token'), [
+        $validator = Validator::make($request->all(), [
             'token' => 'required'
         ]);
        
@@ -124,14 +127,5 @@ class UsersController extends Controller
         }
     }
     
-    public function get_user(Request $request)
-    {
-        $this->validate($request, [
-            'token' => 'required'
-        ]);
- 
-        $user = JWTAuth::authenticate($request->token);
- 
-        return response()->json(['user' => $user]);
-    }
+    
 }    

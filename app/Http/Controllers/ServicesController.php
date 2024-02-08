@@ -310,7 +310,8 @@ class ServicesController extends Controller
         'success' => true,
         'data' => $services
     ]);
-
+    }
+    
     public function unattendedServiceSearched (Request $request)
     {
     $data = $request->input('date')

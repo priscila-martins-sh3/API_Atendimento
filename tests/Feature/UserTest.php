@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use App\Models\User;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class UserTest extends TestCase
 {
@@ -17,8 +18,8 @@ class UserTest extends TestCase
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password',
-            'tipo_funcionario' => 'suporte',
-            'area_atuacao' => 'comercial',
+            'tipo_funcionario' => 'admin',
+            'area_atuacao' => '',
             
         ];
 
@@ -47,8 +48,7 @@ class UserTest extends TestCase
         // Espera-se que a requisição falhe devido aos dados inválidos
         $response->assertStatus(400);
     }
-
-    /** @test */
+    
     public function test_authenticate_Valid_Credential()
     {
         $userData = [
@@ -60,9 +60,9 @@ class UserTest extends TestCase
 
         $response->assertStatus(200)
                  ->assertJsonStructure(['success', 'token']);
+                 
     }
 
-    /** @test */
     public function test_authenticate_Invalid_Credential()
     {
         $invalidUserData = [
@@ -75,4 +75,28 @@ class UserTest extends TestCase
         $response->assertStatus(400)
                  ->assertJson(['success' => false, 'message' => 'As credenciais de login são invalidas.']);
     }
+
+
+    public function test_logout_Valid_Credential()
+    {
+    $user = User::factory()->create(['tipo_funcionario' => 'admin']);
+    $token= auth()->login($user);
+    
+    //$authResponse = $this->postJson('/api/login', $userData);
+
+    //$authResponse->assertStatus(200)
+     //            ->assertJsonStructure(['success', 'token']);
+
+    // Em seguida, fazemos o logout com o token obtido na autenticação
+   // $token = $resposta->json('token');   
+       
+    $logoutResponse = $this-> withHeader('Authorization', "Bearer $token")->postJson('/api/logout', ['token' => $token]); 
+    $logoutResponse->assertStatus(200)
+                   ->assertJsonFragment([
+                       'success' => true,
+                       'message' => 'O usuário foi desconectado.'
+                   ]);
+    }
+
+
 }
