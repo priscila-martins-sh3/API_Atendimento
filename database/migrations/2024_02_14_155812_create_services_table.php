@@ -25,6 +25,8 @@ return new class extends Migration
             $table->foreign('contact_id')->references('id')->on('contacts')->onDelete('cascade');
         
             $table->timestamps();
+            $table->softDeletes();
+
         });
     }
 
@@ -36,3 +38,4 @@ return new class extends Migration
         Schema::dropIfExists('services');
     }
 };
+

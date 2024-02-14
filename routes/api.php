@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UsersController;
 use App\Http\Controller\ServicesController;
+use App\Http\Controller\ContactsController;
 
 
 /*
@@ -23,24 +24,23 @@ Route::post('register', [UsersController::class, 'register']);
 Route::group(['middleware' => ['jwt.verify']], function() {
     Route::post('logout', [UsersController::class, 'logout']);
    
-    
-    Route::post('create', [ServicesController::class, 'store']);
+    Route::get('contacts', [ContactsController::class, 'index']);
+    Route::post('createcontact', [Contactsontroller::class, 'store']);
+    Route::get('contact/{id}', [ContactsController::class, 'show']);
+    Route::put('updatecontact/{contact}', [ContactsController::class, 'update']);
+    Route::delete('deletecontact/{contact}', [ContactsController::class, 'destroy']);
+    Route::post('restorecontact/{id}', [ContactsController::class, 'restore']);   
+
+    Route::post('createservice', [ServicesController::class, 'store']);
     Route::get('services', [ServicesController::class, 'index']);
     Route::get('service/{id}', [ServicesController::class, 'show']);
-    Route::put('update/{service}', [ServicesController::class, 'update']);
+    Route::put('updateservice/{service}', [ServicesController::class, 'update']);
+    Route::delete('deleteservice/{service}', [ServicesController::class, 'destroy']);
+    Route::post('restoreservice/{id}', [ServicesController::class, 'restore']);   
 
-    
-   
-});
-
-Route::group(['middleware' => ['auth', 'suporte']], function () {    
 
     Route::get('services/support', [ServicesController::class, 'findBySupportName']);
-    Route::get('services/unattended', [ServicesController::class, 'findByUnattendedService']);   
-
-});
-
-Route::group(['middleware' => ['auth', 'gerente']], function () {    
+    Route::get('services/unattended', [ServicesController::class, 'findByUnattendedService']); 
     
     Route::get('', [ServicesController::class, 'clientSearched']);
     Route::get('', [ServicesController::class, 'servicesByClient' ]);
@@ -51,8 +51,8 @@ Route::group(['middleware' => ['auth', 'gerente']], function () {
     Route::get('', [ServicesController::class, 'typesServiceSearched']);
     Route::get('', [ServicesController::class, 'servicesByType']);
     Route::get('', [ServicesController::class, 'unattendedServiceSearched']);
-});
 
+});
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();

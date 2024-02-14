@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Support;
 use App\Models\Contact;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Service extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
     protected $fillable = [
         'support_id',
         'contact_id',
@@ -19,10 +20,10 @@ class Service extends Model
 
     ];
 
-    public static $tiposPermitidosAtendimento = ['tirar_duvida', 'informar_problema', 'solicitar_recurso'];
-    public static function tiposValidosAtendimento()
+    public static $tiposPermitidosServico = ['tirar_duvida', 'informar_problema', 'solicitar_recurso'];
+    public static function tiposValidosServico()
     {
-        return implode(',', self::$tiposAtendimento);
+        return implode(',', self::$tiposPermitidosServico);
     }
 
     public function support()

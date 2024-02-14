@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('nome_cliente');
             $table->string('area_atendimento');
             $table->timestamps();
+            $table->softDeletes();
 
             
         });

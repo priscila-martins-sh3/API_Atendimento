@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Support;
-//use JWTAuth;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +16,7 @@ class UsersController extends Controller
     {
     	$rules = [
             'name' => 'required|string',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email',
             'password' => 'required|string|min:6',
             'tipo_funcionario' => 'required|string|in:' . User::tiposValidos(),
         ];
@@ -76,8 +75,8 @@ class UsersController extends Controller
             return response()->json(['error' => $validator->messages()], 400);
         }
 
-        //Request is validated 
-        //Crean token
+        //A solicitação é validada
+        //Cria token
         try {
             if (! $token = JWTAuth::attempt($credentials)) {
                 return response()->json([
@@ -92,8 +91,7 @@ class UsersController extends Controller
                 	'message' => 'Não foi possível criar o token.',
                 ], 500);
         }
-        //dd($token); 	
- 		//Token created, return with success response and jwt token
+    
         return response()->json([
             'success' => true,
             'token' => $token,
@@ -103,7 +101,7 @@ class UsersController extends Controller
     
     public function logout(Request $request)
     {        
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make($request->only('token'), [
             'token' => 'required'
         ]);
        
@@ -111,7 +109,8 @@ class UsersController extends Controller
             return response()->json(['error' => $validator->messages()], 400);
         }
 
-		//Request is validated, do logout        
+		
+        //A solicitação é validada, faça logout
         try {
             JWTAuth::invalidate($request->token);
  

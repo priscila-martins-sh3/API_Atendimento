@@ -12,33 +12,21 @@ use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Validator;
 
 class ServicesController extends Controller
-{
-    
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+{      
 
     /**
      * Store a newly created resource in storage.   
      */
     public function store(Request $request)
-    {
-        //Validate data
-        //$data = $request->only('nome_pessoa', 'nome_cliente', 'area', 'tipo_atendimento','nome_suporte', 'retorno');
+    {       
         $validator = Validator::make($request->all(), [
-            'nome_pessoa'=>'required|string',
-            'nome_cliente'=>'required|string',
-            'area'=>'required|string',
-            'tipo_atendimento'=>'required|string|in:' . Service::tiposValidosAtendimento(),
             
+            'tipo_servico'=>'required|string|in:' . Service::tiposValidosServico(),            
             'retorno' => 'boolean', 
             'informacoes' => 'string|nullable',
-            'data_service' => 'required|date',
-            'hora_service' => 'date_format:H:i|nullable'
+            'support_id' => 'integer|nullable',
+            'contact_id' => 'integer',
+            
         ]); 
 
         //Enviar resposta com falha se a solicitação não for válida
@@ -61,16 +49,13 @@ class ServicesController extends Controller
             return response()->json(['error' => 'O campo nome do suporte é obrigatório.'], 400);
         }
     }
-        $service = Service::create([        	
-        	'nome_pessoa'=>$request->nome_pessoa,
-            'nome_cliente'=>$request->nome_cliente,
-            'area'=>$request->area,
-            'tipo_atendimento'=>$request->tipo_atendimento,            
-            'nome_suporte' => count($suportesDisponiveis) > 0 ? $request->nome_suporte : null,
+        $service = Service::create([      	
+        	    
+            'tipo_servico'=>$request->tipo_atendimento,            
+            'support_id' => count($suportesDisponiveis) > 0 ? $request->nome_suporte : null,
             'retorno' => count($suportesDisponiveis) == 0 ? true : false,
             'informacoes' => $request->informacoes,
-            'data_servico' => $request->data_servico,
-            'hora_servico' => $request->hora_servico,
+            'contact_id' =>
         ]);
 
         // Se um suporte foi escolhido, alterar o atributo 'livre' para false
@@ -82,7 +67,7 @@ class ServicesController extends Controller
             Suporte::where('user_id', $userId)->update(['livre' => false]);
         }
 
-        return response()->json(['success' => true, 'message' => 'Serviço criado com sucesso'], Response::HTTP_OK);
+        ??return response()->json(['success' => true, 'message' => 'Serviço criado com sucesso'], Response::HTTP_OK);
     }
       
     /**
