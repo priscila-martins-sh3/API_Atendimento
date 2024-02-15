@@ -22,54 +22,67 @@ class ServicesController extends Controller
         $validator = Validator::make($request->all(), [
             
             'tipo_servico'=>'required|string|in:' . Service::tiposValidosServico(),            
-            'retorno' => 'boolean', 
-            'informacoes' => 'string|nullable',
-            'support_id' => 'integer|nullable',
-            'contact_id' => 'integer',
+            'retorno' => 'required|boolean', 
+            'informacoes' => 'nullable',    
+            'support_id' => 'nullable',  
+            'contact_id' => 'required',    
             
         ]); 
 
-        //Enviar resposta com falha se a solicitação não for válida
         if ($validator->fails()) {
             return response()->json(['error' => $validator->messages()], 400);
-        }
-
-        $suporteDisponivel = Suporte::where('area_atuacao', $request->area)
-            ->where('livre', true)
-            ->pluck('name')
-            ->toArray();
-
-        // Se houver suportes disponíveis, validar se o campo nome_suporte foi preenchido
-        if (count($suportesDisponiveis) > 0) {
-            $validator = Validator::make($request->all(), [
-            'nome_suporte' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['error' => 'O campo nome do suporte é obrigatório.'], 400);
-        }
-    }
+        }      
+    
         $service = Service::create([      	
         	    
-            'tipo_servico'=>$request->tipo_atendimento,            
-            'support_id' => count($suportesDisponiveis) > 0 ? $request->nome_suporte : null,
-            'retorno' => count($suportesDisponiveis) == 0 ? true : false,
+            'tipo_servico'=> $request->tipo_atendimento,        
+            'retorno' => $request->retorno,
             'informacoes' => $request->informacoes,
-            'contact_id' =>
+            'support_id' => $request->support_id,
+            'contact_id' => $request->contact_id,
         ]);
-
-        // Se um suporte foi escolhido, alterar o atributo 'livre' para false
-        if ($service->nome_suporte) {
-            // Encontrar o ID do usuário associado ao suporte
-            $userId = User::where('name', $service->nome_suporte)->value('id');
-        
-            // Atualizar o atributo 'livre' para false para o suporte associado ao usuário
-            Suporte::where('user_id', $userId)->update(['livre' => false]);
+              
+        if ($request->support_id != null){
+            $support = Support::where('id', $request->support_id)->get();
+            $support->update(['livre' => false]);
         }
 
-        ??return response()->json(['success' => true, 'message' => 'Serviço criado com sucesso'], Response::HTTP_OK);
-    }
+        return response()->json([
+            'success' => true,
+            'message' => 'Serviço criado com sucesso',
+            'data' => $service
+            ], Response::HTTP_OK);
+    }  
       
+    public function associate(Service $service)
+    {
+        // Encontrar o contato associado ao serviço
+        $contact = $service->contact;
+        
+        // Encontrar o suporte disponível na mesma área de atuação do contato
+        $support = Support::where('area_atuacao', $contact->area_atendimento)
+                          ->where('livre', true)
+                          ->first();
+    
+        if (!$support) {
+            return response()->json(['error' => 'Nenhum suporte disponível na mesma área de atuação'], 404);
+        }
+    
+        // Associar o serviço ao suporte encontrado
+        $service->update(['support_id' => $support->id,
+                          'retorno' => false]);
+    
+        // Atualizar o status de disponibilidade do suporte
+        $support->update(['livre' => false]);
+    
+        return response()->json([
+            'success' => true,
+            'message' => 'Serviço associado a um suporte com sucesso',
+            'data' => $service
+        ], Response::HTTP_OK);
+    }
+
+
     /**
      * Display a listing of the resource.
      */
@@ -91,30 +104,20 @@ class ServicesController extends Controller
         return response()->json(['success' => true, 'data' => $service], Response::HTTP_OK);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Service $service)
-    {
-        //
-    }
-
+    
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Service $service)    
-    {
-        // Validar os dados da requisição
+    {        
         $validator = Validator::make($request->all(), [
-            'nome_pessoa' => 'required|string',
-            'nome_cliente' => 'required|string',
-            'area_atendimento' => 'required|string',
-            'tipo_atendimento'=>'required|string|in:' . Service::tiposValidosAtendimento(),
-            'nome_suporte' => 'string|nullable',
-            'retorna_ligacao' => 'required|boolean',
-            'informacoes' => 'string|nullable',
-            'data' => 'required|date',
-            'hora' => 'nullable', 
+            
+            'tipo_servico'=>'required|string|in:' . Service::tiposValidosServico(),            
+            'retorno' => 'required|boolean', 
+            'informacoes' => 'nullable',    
+            'support_id' => 'nullable',  
+            'contact_id' => 'required',    
+           
         ]);
 
         // Verificar se a validação falhou
@@ -128,7 +131,7 @@ class ServicesController extends Controller
         // Responder com sucesso
         return response()->json([
             'success' => true,
-            'message' => 'Service updated successfully',
+            'message' => 'Serviço atualizado com sucesso',
             'data' => $service
         ], Response::HTTP_OK);
     }
@@ -138,10 +141,30 @@ class ServicesController extends Controller
      */
     public function destroy(Service $service)
     {
-        //
+        $service->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Serviço deletado com sucesso'
+        ], Response::HTTP_OK);
     }
 
-    public function findBySupportName(Request $request)
+    public function restore($id)
+    {
+        $service = Service::onlyTrashed()->findOrFail($id); 
+        $service->restore(); 
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Serviço restaurado com sucesso'
+    ], Response::HTTP_OK);        
+    }
+
+
+
+
+
+    public function findByServiceSupport(Request $request)
     {
     $user = auth()->user();
 
@@ -151,7 +174,7 @@ class ServicesController extends Controller
     }
 
     // Buscar os serviços atribuídos ao nome do suporte
-    $services = Service::where('nome_suporte', $user->name)->get();
+    $services = Service::where('support_id', $user->support->id)->get();
 
     return response()->json([
         'success' => true,
@@ -159,7 +182,7 @@ class ServicesController extends Controller
     ], Response::HTTP_OK);
     }
 
-    public function findByAreaUnattendedService(Request $request)
+    public function findByUnattendedServiceAreaSupport(Request $request)
     {
     $user = auth()->user();
 
@@ -170,29 +193,24 @@ class ServicesController extends Controller
 
     // Buscar os serviços sem atendimento da área do suporte
     $services = Service::where('retorno', true)
-                        ->where('area_atendimento', $user->suporte->area_atuacao)
-                        ->get();
+                        ->whereHas('contact', function ($query) use ($user) {
+                            $query->where('area_atendimento', $user->suporte->area_atuacao);
+                        })
+                        ->get();                    
+                        
 
     return response()->json([
         'success' => true,
         'data' => $services
     ], Response::HTTP_OK);
     }
-
-    public function clientService (Request $request)
-    {
-    $user = auth()->user()
-    if ($user->tipo_funcionario !== 'gerente') {
-        return response()->json(['error' => 'Somente usuário gerente podem acessar esta função.'], 403);
-    }   
-   
-    }
+    
 
     public function clientSearched(Request $request)
     {
     // Recuperar uma lista de nomes de clientes registrados no dia especificado
     $date = $request->input('date');
-    $clients = Service::whereDate('created_at', $date)
+    $clients = Contact::whereDate('created_at', $date)
                       ->whereNotNull('nome_cliente')
                       ->distinct()
                       ->pluck('nome_cliente');
@@ -202,100 +220,49 @@ class ServicesController extends Controller
         'data' => $clients
     ]);
     }
-
-    public function servicesByClient(Request $request)
-    {
-    //Recuperar os serviços associados a um cliente específico
-    $clientName = $request->input('client_name');
-    $services = Service::where('nome_cliente', $clientName)
-                       ->get();
-
-    return response()->json([
-        'success' => true,
-        'data' => $services
-    ]);
-    }
+    
 
     public function suportServicesSearched(Request $request)
     {
     $date = $request->input('date');    
-    $suport = Service::whereDate('created_at', $date)
-                    ->whereNotNull('nome_suporte')
-                    ->groupBy('nome_suporte')                      
+    $support = Service::whereDate('created_at', $date)
+                    ->where('support_id')
+                    ->groupBy('support_id')                      
                     ->addSelect(['total' => Service::raw('COUNT(*)')])
-                    ->get(['nome_suporte', 'total']);
+                    ->get(['support_id', 'total']);
 
     return response()->json([
         'success' => true,
-        'data' => $suport
+        'data' => $support
     ]);
     }
-
-    public function servicesBySuport(Request $request)
-    {
-   
-    $suportName = $request->input('suport_name');
-    $services = Service::where('nome_suporte', $suportName)
-                       ->get();
-
-    return response()->json([
-        'success' => true,
-        'data' => $services
-    ]);
     
-    }
-
     public function areasSearched(Request $request)
     {
     $date = $request->input('date');
-    $areas = Service::whereDate('created_at', $date)
+    $areas = Contact::whereDate('created_at', $date)
                     ->distinct()
-                    ->pluck('area');    
+                    ->pluck('area_atendimento');    
 
     return response()->json([
         'success' => true,
         'data' => $areas
     ]);
     }
-
-    public function servicesByAreas(Request $request)
-    {
-   
-    $areaName = $request->input('area_name');
-    $services = Service::where('area', $areaName)
-                       ->get();
-
-    return response()->json([
-        'success' => true,
-        'data' => $services
-    ]);
-    }
-
+        
+    
     public function typesServiceSearched(Request $request)
     {
     $data = $request->input('date')    
     $types = Service::whereDate('created_at', $data)  
                     ->distinct()
-                    ->pluck('tipo_atendimento');  
+                    ->pluck('tipo_servico');  
 
     return response()->json([
         'success' => true,
         'data' => $types
     ]);                
-    } 
-
-    public function servicesByType(Request $request)
-    {
-   
-    $typeName = $request->input('type_name');
-    $services = Service::where('tipo_atendimento', $typeName)
-                       ->get();
-
-    return response()->json([
-        'success' => true,
-        'data' => $services
-    ]);
-    }
+    }    
     
     public function unattendedServiceSearched (Request $request)
     {

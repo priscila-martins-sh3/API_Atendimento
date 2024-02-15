@@ -100,12 +100,11 @@ class ContactsController extends Controller
     public function restore($id)
     {
         $contact = Contact::onlyTrashed()->findOrFail($id); 
-        $contact->restore(); // Restaura o contato
+        $contact->restore(); 
 
         return response()->json([
             'success' => true,
             'message' => 'Contato restaurado com sucesso'
-    ], Response::HTTP_OK);
-        
+    ], Response::HTTP_OK);        
     }
 }
