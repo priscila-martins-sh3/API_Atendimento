@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('services', function (Blueprint $table) {
             $table->id();            
             $table->string('tipo_servico');            
-            $table->boolean('retorno')->default(false);
+            $table->boolean('retorno');
             $table->string('informacoes')->nullable();            
             
 

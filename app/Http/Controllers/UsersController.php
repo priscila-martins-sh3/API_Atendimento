@@ -21,6 +21,7 @@ class UsersController extends Controller
             'tipo_funcionario' => 'required|string|in:' . User::tiposValidos(),
         ];
         
+        //verifica se suporte preencheu area_atuação
         if ($request->tipo_funcionario === 'suporte') {
 
             if (!$request->filled('area_atuacao')) {
@@ -75,8 +76,7 @@ class UsersController extends Controller
             return response()->json(['error' => $validator->messages()], 400);
         }
 
-        //A solicitação é validada
-        //Cria token
+        //A solicitação é validada, cria token
         try {
             if (! $token = JWTAuth::attempt($credentials)) {
                 return response()->json([

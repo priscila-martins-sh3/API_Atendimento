@@ -40,48 +40,17 @@ class ServicesController extends Controller
             'informacoes' => $request->informacoes,
             'support_id' => $request->support_id,
             'contact_id' => $request->contact_id,
-        ]);
-              
-        if ($request->support_id != null){
-            $support = Support::where('id', $request->support_id)->get();
-            $support->update(['livre' => false]);
-        }
-
+        ]);            
+        
+        /*if ($request->filled('support_id')) {
+            Support::where('id', $request->support_id)->update(['livre' => false]);
+        } */   
         return response()->json([
             'success' => true,
             'message' => 'Serviço criado com sucesso',
             'data' => $service
             ], Response::HTTP_OK);
-    }  
-      
-    public function associate(Service $service)
-    {
-        // Encontrar o contato associado ao serviço
-        $contact = $service->contact;
-        
-        // Encontrar o suporte disponível na mesma área de atuação do contato
-        $support = Support::where('area_atuacao', $contact->area_atendimento)
-                          ->where('livre', true)
-                          ->first();
-    
-        if (!$support) {
-            return response()->json(['error' => 'Nenhum suporte disponível na mesma área de atuação'], 404);
-        }
-    
-        // Associar o serviço ao suporte encontrado
-        $service->update(['support_id' => $support->id,
-                          'retorno' => false]);
-    
-        // Atualizar o status de disponibilidade do suporte
-        $support->update(['livre' => false]);
-    
-        return response()->json([
-            'success' => true,
-            'message' => 'Serviço associado a um suporte com sucesso',
-            'data' => $service
-        ], Response::HTTP_OK);
-    }
-
+    }           
 
     /**
      * Display a listing of the resource.
@@ -123,11 +92,14 @@ class ServicesController extends Controller
         // Verificar se a validação falhou
         if ($validator->fails()) {
         return response()->json(['error' => $validator->messages()], 400);
-         }
+        }
 
         // Atualizar os atributos do serviço
         $service->update($request->all());
 
+        /*if ($request->filled('support_id')) {
+            Support::where('id', $request->support_id)->update(['livre' => false]);
+        }*/
         // Responder com sucesso
         return response()->json([
             'success' => true,
@@ -160,9 +132,72 @@ class ServicesController extends Controller
     ], Response::HTTP_OK);        
     }
 
+    public function associate(Service $service)
+    {
+        // Encontrar o contato associado ao serviço
+        $contact = $service->contact;
+        
+        // Encontrar o suporte disponível na mesma área de atuação do contato
+        $support = Support::where('area_atuacao', $contact->area_atendimento)
+                          ->where('livre', true)
+                          ->first();
+    
+        if (!$support) {
+            return response()->json(['error' => 'Nenhum suporte disponível na mesma área de atuação'], 404);
+        }
+    
+        // Associar o serviço ao suporte encontrado
+        $service->update(['support_id' => $support->id,
+                          'retorno' => false]);
+    
+        // Atualizar o status de disponibilidade do suporte
+        $support->update(['livre' => false]);
+    
+        return response()->json([
+            'success' => true,
+            'message' => 'Serviço associado a um suporte com sucesso',
+            'data' => $service
+        ], Response::HTTP_OK);
+    }
 
+    public function freeSupport($serviceId)
+    {
+        // Encontrar o serviço pelo ID
+        $service = Service::find($serviceId);
+    
+        // Verificar se o serviço foi encontrado
+        if (!$service) {
+            return response()->json(['error' => 'Serviço não encontrado.'], 404);
+        }
+    
+        // Verificar se o serviço já está fechado
+        if ($service->retorno) {
+            return response()->json(['error' => 'O serviço precisa de retorno.'], 400);
+        }
+    
+        // Se o serviço estiver aberto e associado a um suporte
+        if ($service->support_id) {
+            // Encontrar o suporte associado ao serviço
+            $support = Support::find($service->support_id);
+    
+            // Verificar se o suporte foi encontrado
+            if ($support) {
+                // Atualizar o status de disponibilidade do suporte para livre (true)
+                $support->update(['livre' => true]);
+                
+            } else {
+                return response()->json(['error' => 'Serviço está sem retorno, mas o suporte não foi encontrado.'], 500);
+            }
+        }
+    
+        return response()->json([
+            'success' => true,
+            'message' => 'O status do suporte foi atualizado para livre.',
+            'data' => $support
+        ], Response::HTTP_OK);
+    }    
 
-
+   
 
     public function findByServiceSupport(Request $request)
     {
@@ -208,6 +243,9 @@ class ServicesController extends Controller
 
     public function clientSearched(Request $request)
     {
+    $request->validate([
+        'data' => 'required|date',
+    ]);    
     // Recuperar uma lista de nomes de clientes registrados no dia especificado
     $date = $request->input('date');
     $clients = Contact::whereDate('created_at', $date)
@@ -222,11 +260,11 @@ class ServicesController extends Controller
     }
     
 
-    public function suportServicesSearched(Request $request)
+    public function suportServiceSearched(Request $request)
     {
     $date = $request->input('date');    
     $support = Service::whereDate('created_at', $date)
-                    ->where('support_id')
+                    ->whereNotNull('support_id')
                     ->groupBy('support_id')                      
                     ->addSelect(['total' => Service::raw('COUNT(*)')])
                     ->get(['support_id', 'total']);
@@ -237,8 +275,9 @@ class ServicesController extends Controller
     ]);
     }
     
-    public function areasSearched(Request $request)
+    public function areaSearched(Request $request)
     {
+   
     $date = $request->input('date');
     $areas = Contact::whereDate('created_at', $date)
                     ->distinct()
@@ -251,7 +290,7 @@ class ServicesController extends Controller
     }
         
     
-    public function typesServiceSearched(Request $request)
+    public function typeServiceSearched(Request $request)
     {
     $data = $request->input('date')    
     $types = Service::whereDate('created_at', $data)  
