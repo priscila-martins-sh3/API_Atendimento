@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Service;
-use App\Models\Suporte;
+use App\Models\Support;
+use App\Models\Contact;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use JWTAuth;
@@ -35,7 +36,7 @@ class ServicesController extends Controller
     
         $service = Service::create([      	
         	    
-            'tipo_servico'=> $request->tipo_atendimento,        
+            'tipo_servico'=> $request->tipo_servico,        
             'retorno' => $request->retorno,
             'informacoes' => $request->informacoes,
             'support_id' => $request->support_id,
@@ -150,8 +151,9 @@ class ServicesController extends Controller
         $service->update(['support_id' => $support->id,
                           'retorno' => false]);
     
-        // Atualizar o status de disponibilidade do suporte
-        $support->update(['livre' => false]);
+        // Atualizar o status de disponibilidade do suporte        
+        $support->livre = false;
+        $support->save();
     
         return response()->json([
             'success' => true,
@@ -183,7 +185,8 @@ class ServicesController extends Controller
             // Verificar se o suporte foi encontrado
             if ($support) {
                 // Atualizar o status de disponibilidade do suporte para livre (true)
-                $support->update(['livre' => true]);
+                $support->livre = true;
+                $support->save();
                 
             } else {
                 return response()->json(['error' => 'Serviço está sem retorno, mas o suporte não foi encontrado.'], 500);
@@ -202,6 +205,7 @@ class ServicesController extends Controller
     public function findByServiceSupport(Request $request)
     {
     $user = auth()->user();
+    $support = $user->support()->first();
 
     // Verificar se o usuário é do tipo suporte
     if ($user->tipo_funcionario !== 'suporte') {
@@ -209,7 +213,7 @@ class ServicesController extends Controller
     }
 
     // Buscar os serviços atribuídos ao nome do suporte
-    $services = Service::where('support_id', $user->support->id)->get();
+    $services = Service::where('support_id', $support->id)->get();
 
     return response()->json([
         'success' => true,
@@ -220,16 +224,21 @@ class ServicesController extends Controller
     public function findByUnattendedServiceAreaSupport(Request $request)
     {
     $user = auth()->user();
-
+    
+       
+    $supports = $user->support; 
+    
+  
     // Verificar se o usuário é do tipo suporte e está livre
-    if ($user->tipo_funcionario !== 'suporte' || !$user->suporte->livre) {
-        return response()->json(['error' => 'Somente usuários suporte livres podem acessar esta função.'], 403);
-    }
+    foreach ($supports as $support)
+        if ($user->tipo_funcionario !== 'suporte' || !$support->livre) {
+            return response()->json(['error' => 'Somente usuários suporte livres podem acessar esta função.'], 403);
+        }
 
     // Buscar os serviços sem atendimento da área do suporte
     $services = Service::where('retorno', true)
-                        ->whereHas('contact', function ($query) use ($user) {
-                            $query->where('area_atendimento', $user->suporte->area_atuacao);
+                        ->whereHas('contact', function ($query) use ($support) {
+                            $query->where('area_atendimento', $support->area_atuacao);
                         })
                         ->get();                    
                         
@@ -290,18 +299,18 @@ class ServicesController extends Controller
     }
         
     
-    public function typeServiceSearched(Request $request)
+    /*public function typeServiceSearched(Request $request)
     {
     $data = $request->input('date')    
     $types = Service::whereDate('created_at', $data)  
                     ->distinct()
                     ->pluck('tipo_servico');  
-
+   
     return response()->json([
         'success' => true,
         'data' => $types
     ]);                
-    }    
+    }  
     
     public function unattendedServiceSearched (Request $request)
     {
@@ -315,7 +324,7 @@ class ServicesController extends Controller
         'data' => $unattended
     ]);              
     }
-
+*/
     
 }
 

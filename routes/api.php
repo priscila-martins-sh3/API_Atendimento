@@ -1,10 +1,11 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UsersController;
-use App\Http\Controller\ServicesController;
-use App\Http\Controller\ContactsController;
+use App\Http\Controllers\ServicesController;
+use App\Http\Controllers\ContactsController;
 
 
 /*
@@ -21,15 +22,18 @@ use App\Http\Controller\ContactsController;
 Route::post('login', [UsersController::class, 'authenticate'])->name('login');
 Route::post('register', [UsersController::class, 'register']);
 
+
+
 Route::group(['middleware' => ['jwt.verify']], function() {
     Route::post('logout', [UsersController::class, 'logout']);
    
+    
     Route::get('contacts', [ContactsController::class, 'index']);
     Route::post('createcontact', [ContactsController::class, 'store']);
     Route::get('contact/{id}', [ContactsController::class, 'show']);
     Route::put('updatecontact/{contact}', [ContactsController::class, 'update']);
     Route::delete('deletecontact/{contact}', [ContactsController::class, 'destroy']);
-    Route::post('restorecontact/{id}', [ContactsController::class, 'restore']);   
+    Route::post('restorecontact/{id}', [ContactsController::class, 'restore']); 
 
     Route::post('createservice', [ServicesController::class, 'store']);
     Route::get('services', [ServicesController::class, 'index']);

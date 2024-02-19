@@ -2,8 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Contact;
 use Illuminate\Http\Request;
+use App\Models\User;
+use App\Models\Support;
+use App\Models\Contact;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Validator;
 
 class ContactsController extends Controller
@@ -36,7 +41,7 @@ class ContactsController extends Controller
         $contact = Contact::create([        	
         	'nome_pessoa'=>$request->nome_pessoa,
             'nome_cliente'=>$request->nome_cliente,
-            'area_atendimento'=>$request->area,                
+            'area_atendimento'=>$request->area_atendimento,                
             
         ]);        
         
